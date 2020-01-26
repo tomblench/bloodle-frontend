@@ -51,7 +51,7 @@ class Events extends React.Component {
         <ul>
           {items.map(item => (
             <li key={item.name}>
-                  <a href="#" onClick={this.handleClick} id={item._links.self.href}>      
+                  <a href="#" onClick={this.handleClick} id={item.id}>      
                 {item.name}
               </a>
             </li>

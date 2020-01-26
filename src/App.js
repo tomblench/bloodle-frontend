@@ -5,6 +5,7 @@ import Users from './Users.js';
 import Events from './Events.js';
 import Votes from './Votes.js';
 import VotingSummary from './VotingSummary.js';
+import EventVotes from './EventVotes.js';
 import Choices from './Choices.js';
 import Utils from './Utils';
 
@@ -13,97 +14,33 @@ class App extends React.Component {
   constructor(props) {
       super(props);
             this.handleEventChange = this.handleEventChange.bind(this);
-      this.state = {voteData: {}, choiceData: {}, eventData: {}, eventIsLoaded: false, eventError: null};
+      this.state = {votingSummaryData: {}, votingSummaryIsLoaded: false};
   }
 
-
-    fetchVote(url) {
+    fetchData(url, onData, onError) {
       fetch(url)
-      .then(res => res.json())
-      .then(
-          (result) => {
-          this.setState({
-              voteData: result,
-          });
-
-        },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        (error) => {
-            this.setState({
-                eventError: error
-          });
-        }
-      );
-    }
-
-    
-    fetchChoices(url) {
-      fetch(url)
-      .then(res => res.json())
-      .then(
-          (result) => {
-              console.log(JSON.stringify(result));
-          this.setState({
-              choiceData: result,
-          });
-              console.log(JSON.stringify("***"+result._embedded.choices));
-              const that = this;
-              result._embedded.choices.forEach(function(ch) {
-                  console.log(ch._links.votes.href);
-                  const voteUrl = Utils.rewriteLink(ch._links.votes.href);
-                  console.log(voteUrl);
-                  that.fetchVote(voteUrl);
-              });
-
-        },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        (error) => {
-            this.setState({
-                eventError: error
-          });
-        }
-      );
-    }
-
-    fetchEvent(url) {
-        fetch(url)
       .then(res => res.json())
       .then(
         (result) => {
-          this.setState({
-              eventData: result,
-              eventIsLoaded: true              
-          });
-            const choicesUrl = Utils.rewriteLink(result._links.choices.href);
-            this.fetchChoices(choicesUrl);
+            onData(result);
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
         (error) => {
-            this.setState({
-                eventError: error
-          });
+            onError(error);
         }
-      )
-
+      );
     }
-    
+
     handleEventChange(e){
         console.log("event changed app");
-        const url = Utils.rewriteLink(e.target.id);
-        this.fetchEvent(url);        
+        const url = "http://localhost:3000/demo/eventVotes?eventId="+e.target.id;
+        this.fetchData(url,
+                       (result) => {this.setState({votingSummaryData:result, votingSummaryIsLoaded: true});},
+                       (error) => {console.log(error);});        
     }
     
     render() {
-            const eventData = this.state.eventData;
-            const eventIsLoaded = this.state.eventIsLoaded;
-            const eventError = this.state.eventError;
-            const choiceData = this.state.choiceData;
+            const votingSummaryData = this.state.votingSummaryData;
+            const votingSummaryIsLoaded = this.state.votingSummaryIsLoaded;
         return (
     <div className="App">
           <header className="App-header">
@@ -113,8 +50,9 @@ class App extends React.Component {
       />
 
           <h3>Voting Summary:</h3>
-          <VotingSummary
-            choiceData={choiceData} data={eventData} isLoaded={eventIsLoaded} error={eventError}
+                <EventVotes
+            isLoaded={votingSummaryIsLoaded}
+            data={votingSummaryData}
       />
 
 
